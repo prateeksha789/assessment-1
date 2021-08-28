@@ -1,0 +1,190 @@
+---
+title: "Assessment 1"
+author: "Prateeksha 4658793"
+date: "28/08/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+library(skimr)
+library(mapproj)
+
+
+```
+# **R Markdown is a file format for making dynamic documents with R.** An *R Markdown document is written in markdown* (an easy-to-write plain text format) and contains chunks of embedded R code#
+
+
+```{r fastfood}
+
+fastfood <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-09-04/fastfood_calories.csv") #assigning variable fastfood
+
+```
+
+
+```{r 1}
+
+fastfood10 <- fastfood %>% head(10) #displaying first 10 rows of fastfood. 
+
+
+knitr::kable(fastfood [1:10, 1:5]) #displaying first 10 rows and 5 variables
+
+fastfood10 %>% filter( calories>1000) #displaying calories more than 1000
+
+dont_eat_this <- fastfood10 %>% filter(total_fat>40 & total_carb>80) #displaying the observations with total fat > 40 and total_card>80 and assigned to variable dont_eat_this
+
+```
+
+
+```{r}
+
+Mcdonalds <-  fastfood %>% filter(restaurant == "Mcdonalds") #displaying restaurant Mcdonalds
+
+```
+
+
+
+
+```{r skimr}
+
+Variables <- skim(fastfood) %>%
+  dplyr::select(skim_variable)  # displaying types of variables using skim
+```
+
+
+```{r counting}
+fastfood %>%
+  count(restaurant, sort = TRUE) %>%
+  kable()  #counting observations of each restaurant
+```
+
+
+```{r grouping}
+averagecalories <- fastfood %>%
+  group_by(restaurant) %>%
+  summarise(mean(calories))  #displaying average no of calories per type of restaurant
+
+```
+
+
+```{r mutating}
+addingcalories <- fastfood %>%
+  group_by(restaurant) %>%
+  mutate(average_calories = mean(calories)) %>%
+  ungroup() # adding new variable average_calories to the existing data set
+```
+
+
+```{r fat}
+addingcalories %>% 
+  group_by(restaurant) %>% 
+  summarise(max(total_fat)) %>%
+  ungroup()                                           #displaying total fat per each type of restaurant
+
+```
+
+
+```{r mutating fat}
+final <- addingcalories %>%
+  group_by(restaurant) %>%
+  mutate(max_total_fat = max(total_fat)) %>%  
+  ungroup()   #adding Max_total_fat to existing data set
+```
+
+
+```{r ggplot}
+
+ggplot(final, aes(restaurant, max_total_fat, fill = restaurant)) +
+  geom_col() #displaying total fat per restaurant.
+
+```
+
+
+#ggplot2 is a plotting package that makes it simple to create complex plots from data in a data frame. It provides a more programmatic interface for specifying what variables to plot, how they are displayed, and general visual properties.#
+
+
+
+
+```{r plotting}
+
+final %>% filter(restaurant == "Mcdonalds") %>% ggplot(aes(x=sugar,y=protein, colour = restaurant, size = sugar)) +
+  geom_point()
+
+#displaying protein and sugar 
+
+
+```
+
+
+```{r factor}
+class(final$restaurant)  #identifying variables that can be converted as factors
+
+final2 <- as_factor(final$restaurant) #converting the variable data type
+
+
+calories_type <- cut_number(final$calories, n = 3, labels=c("low", "med", "high")) 
+ levels(calories_type)    #making groups using cut_number functions
+
+fastfood <- final %>% mutate(fct_relevel(calories_type)) #adding the variable to data type
+
+```
+
+
+
+
+```{r plotting again}
+
+fastfood %>% ggplot(aes(calories_type,restaurant,)) +
+  geom_col() +
+   coord_flip() +
+  facet_wrap(~restaurant) +
+  theme_linedraw()
+
+```
+
+
+
+
+```{r adding}
+
+fastfood <- fastfood %>% mutate(trans_fat_percent = trans_fat/total_fat * 100)
+
+#show the percentage of `trans_fat` in `total_fat`
+
+```
+
+
+
+
+
+
+
+
+```{r plots}
+ 
+  ggplot(fastfood, aes(trans_fat_percent,restaurant,fill = restaurant)) + 
+  geom_col() +
+   coord_flip() +
+  theme_linedraw()
+
+```
+
+
+```{r totalfat}
+
+totalfat <- fastfood %>%
+  group_by(restaurant) %>%
+  summarise(total_fat = mean(total_fat)) #show the average (mean)  `total_fat` for each type of restaurant
+  
+
+```
+
+
+```{r totalfat plot}
+
+ ggplot(totalfat, aes(total_fat, restaurant, fill = restaurant)) +
+  geom_col()
+
+```
